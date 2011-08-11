@@ -1,6 +1,5 @@
 #include <assert.h>
 #include <stdio.h>
-#include <omp.h>
 
 #include "PAPC_c.h"
 
