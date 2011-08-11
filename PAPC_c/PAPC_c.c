@@ -38,6 +38,7 @@ void pointer_distance(int P[dim_x], int D[dim_x])
 
 	for(x = 0; x < log_x; x++)
 	{
+		#pragma omp parallel for schedule(static, 4) shared(S,P) private(i) num_threads(4)
 		for(i = 0; i < dim_x; i++)
 		{		
 			if(S[i] != S[S[i]])

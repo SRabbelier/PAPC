@@ -78,6 +78,7 @@ void merge(int A[dim_x], int B[dim_x], int C[dim_2x])
 	int BB[log_x] = { 0 };
 	int i;
 
+	#pragma omp parallel for schedule(static, 1) shared(A,B,C,AA,BB) private(i) num_threads(4)
 	for(i = 0; i < dim_x/log_x; i++)
 	{
 		int pos = i*log_x;
@@ -93,6 +94,7 @@ void merge(int A[dim_x], int B[dim_x], int C[dim_2x])
 		C[rank_b] = B[pos];
 	}
 
+	#pragma omp parallel for schedule(static, 1) shared(A,B,C,AA,BB) private(i) num_threads(4)
 	for(i = 0; i < dim_x/log_x; i++)
 	{
 		int pos = i*log_x;

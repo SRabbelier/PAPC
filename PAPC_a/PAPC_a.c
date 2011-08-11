@@ -31,6 +31,7 @@ void prefix(const int A[dim_x], int B[dim_x][dim_i])
 		// B[h,j] := B[h - 1, 2j -1] + B[h - 1, 2j]
 		int h_pow = pow(2, h);
 		int size = dim_i / h_pow;
+		#pragma omp parallel for schedule(static, 1) shared(A,B,h_pow,size,h) private(j) num_threads(4)
 		for(j = 1; j <= size; j++)
 		{
 			int prev, curr, next;
@@ -52,6 +53,7 @@ void minima(int B[dim_x][dim_i], int P[dim_x][dim_i], int S[dim_x][dim_i])
 
 	for(x = dim_x-1; x >= 0; x--)
 	{
+		#pragma omp parallel for schedule(static, 1) shared(B,P,S,x,prev_size,size) private(i) num_threads(4)
 		for(i = 0; i < size; i++) 
 		{
 			int curr, prev_pos, prev, next;
