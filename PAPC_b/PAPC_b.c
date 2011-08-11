@@ -9,16 +9,27 @@
 #define log_x 4
 #define dim_log dim_x / log_x
 
-int rank(int x, int A[dim_x])
+// adapted from http://en.wikipedia.org/wiki/Binary_search#Iterative
+int rank(int value, int A[dim_x])
 {
-	int i;
-	for(i = 0; i < dim_x; i++)
+	int low = 0;
+	int high = dim_x-1;
+	int mid;
+
+	while (low <= high)
 	{
-		int val_a = A[i];
-		if(val_a > x)
-			return i;
+		mid = low + ((high - low) / 2);
+
+		if (A[mid] > value) {
+			high = mid - 1;
+		} else if (A[mid] < value) {
+			low = mid + 1;
+		} else {
+			return mid;
+		}
 	}
-	return dim_x;
+
+	return low;
 }
 
 void seq_merge(int A[dim_x], int B[dim_x], int C[dim_2x], int start_a, int start_b)
