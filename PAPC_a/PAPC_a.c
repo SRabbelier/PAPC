@@ -40,101 +40,7 @@ void prefix(const int A[dim_x], int B[dim_x][dim_i])
 			next = prev < curr ? prev : curr;
 			B[h][j-1] = next;
 		}
-	}
-}
 
-/**
-  A = [6,9,5,8,2,3,4,1]
-
-  B =
-0: 6, 9, 5, 8, 2, 3, 4, 1
-1: 6, 5, 2, 1
-2: 5, 1
-3: 1
-
-P =
-0: 6, 6, 5, 5, 2, 2, 2, 1
-1: 6, 5, 2, 1
-2: 5, 1
-3: 1
-
- **/
-
-void prefix_minima(int B[dim_x][dim_i], int P[dim_x][dim_i])
-{
-	int x, i;
-	int size = dim_i;
-
-	for(x = 0; x < dim_x; x++)
-	{
-		for(i = 0; i < size; i++) 
-		{
-			int curr, prev_pos, prev, next;
-
-			curr = B[x][i];
-			prev_pos = ceil((float)i/2.0)-1;
-
-			if(prev_pos < 0)
-			{
-				next = curr;
-			}
-			else
-			{
-				prev = B[x+1][prev_pos];
-				next = curr < prev ? curr : prev;
-			}
-			P[x][i] = next;
-		}
-
-		size /= 2;
-	}
-}
-
-/**
-  A = [1, 4, 2, 3, 8, 6, 5, 9]
-
-  B =
-0: 1, 4, 2, 3, 8, 6, 5, 9
-1: 1, 2, 6, 5
-2: 1, 5
-3: 1
-
-S =
-0: 1, 2, 2, 3, 5, 5, 5, 9
-1: 1, 2, 5, 5
-2: 1, 5
-3: 1
- **/
-
-void suffix_minima(int B[dim_x][dim_i], int S[dim_x][dim_i])
-{
-	int x, i;
-	int prev_size = 0;
-	int size = 1;
-
-	for(x = dim_x-1; x >= 0; x--)
-	{
-		for(i = 0; i < size; i++) 
-		{
-			int curr, prev_pos, prev, next;
-
-			curr = B[x][i];
-			prev_pos = ceil((float)i/2.0);
-
-			if(prev_pos >= prev_size)
-			{
-				next = curr;
-			}
-			else
-			{
-				prev = S[x+1][prev_pos];
-				next = curr < prev ? curr : prev;
-			}
-			S[x][i] = next;
-		}
-
-		prev_size = size;
-		size *= 2;
 	}
 }
 
@@ -285,9 +191,9 @@ int calculate_suffix_minima()
 
 	int Bp[dim_x][dim_i] = {
 		{1, 4, 2, 3, 8, 6, 5, 9},
-		{1,	2,	6,	5   },
-		{1,		  5		 },
-		{1					 },
+		{1,	2, 6, 5},
+		{1, 5},
+		{1},
 	};
 
 	eq = array_cmp(B, Bp);
