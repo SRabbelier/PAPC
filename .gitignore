@@ -1,5 +1,8 @@
 *.o
 *.proj
 PAPC_a/PAPC_a
+PAPC_a/PAPC_a_
 PAPC_b/PAPC_b
+PAPC_b/PAPC_b_
 PAPC_c/PAPC_c
+PAPC_c/PAPC_c_
