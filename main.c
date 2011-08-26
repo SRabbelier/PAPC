@@ -75,13 +75,15 @@ int main (int argc, char *argv[])
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
-    printf("|  NSize | Iter | Seq      | Op01     | Op02     | Op04     | Op08     | Op16     | Th01     | Th02     | Th04     | Th08     | Par16    |\n");
+    //printf("|  NSize | Iter | Seq      | Op01     | Op02     | Op04     | Op08     | Op16     | Th01     | Th02     | Th04     | Th08     | Par16    |\n");
+
+    printf("NSize,Iter,Seq,Op01,Op02,Op04,Op08,Op16,Th01,Th02,Th04,Th08,Par16\n");
 
     // for each input size
     for(c=0; c < MAX_NSIZE; c++){
         n = Ns[c];
         log_n = Ls[c];
-        printf("| %6d | %4d |",n,TIMES);
+        printf("%d,%d,",n,TIMES);
 
         /* Run sequential algorithm */
         dt=0;
@@ -92,7 +94,7 @@ int main (int argc, char *argv[])
         }
         gettimeofday (&endt, NULL);
         dt = (endt.tv_sec*1000000+endt.tv_usec) - (startt.tv_sec*1000000+startt.tv_usec);
-        printf(" %ld.%06ld | ", dt/1000000, dt%1000000);
+        printf("%ld.%06ld,", dt/1000000, dt%1000000);
 
         for(nt=1; nt<NUM_THREADS; nt=nt<<1){
             /* Run sequential algorithm */
@@ -104,7 +106,7 @@ int main (int argc, char *argv[])
             }
             gettimeofday (&endt, NULL);
             dt = (endt.tv_sec*1000000+endt.tv_usec) - (startt.tv_sec*1000000+startt.tv_usec);
-            printf("%ld.%06ld | ", dt/1000000, dt%1000000);
+            printf("%ld.%06ld,", dt/1000000, dt%1000000);
         }
 
         /* Run threaded algorithm(s) */
@@ -154,7 +156,7 @@ int main (int argc, char *argv[])
                 return -1;
             }
             dt = (endt.tv_sec*1000000+endt.tv_usec) - (startt.tv_sec*1000000+startt.tv_usec);
-            printf("%ld.%06ld | ", dt/1000000, dt%1000000);
+            printf("%ld.%06ld,", dt/1000000, dt%1000000);
         }
         printf("\n");
     }
