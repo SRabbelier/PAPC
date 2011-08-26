@@ -5,8 +5,6 @@
 #include "../main.h"
 
 
-// Seed Input
-extern int A[NMAX];
 // Subset
 extern int B[NMAX];
 // Output
@@ -17,7 +15,7 @@ extern int AA[NMAX / LOG2_NMAX];
 extern int BB[NMAX / LOG2_NMAX];
 extern int S[NMAX];
 
-extern pthread_barrier_t barr, internal_barr;
+extern pthread_barrier_t internal_barr;
 
 void init(int n){
     /* Initialize the input for this iteration*/

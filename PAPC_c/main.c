@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <stdio.h>
+#include <pthread.h>
 
 extern void seq_function(int n, int log_n);
 
@@ -23,6 +24,8 @@ int array_cmp(int L[dim_x], int R[dim_x])
 int B[dim_x] = {13, 12, 4, 15, 10, 9, 8, 11, 8, 7, 6, 14, 3, 2, 1, 0};
 int C[dim_x] = { 0 };
 int S[dim_x] = { 0 };
+
+pthread_barrier_t internal_barr;
 
 void calculate_pointer_distance()
 {
