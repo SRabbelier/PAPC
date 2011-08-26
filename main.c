@@ -33,14 +33,18 @@ int A[NMAX];
 
 // Subset
 int B[NMAX];
+int B2[NMAX];
+int B_[LOG2_NMAX+1][NMAX]
 
 // Output
 int C[2*NMAX];
+int C_[LOG2_NMAX+1][NMAX]
 
 // Scratch area
 int AA[NMAX / LOG2_NMAX];
 int BB[NMAX / LOG2_NMAX];
 int S[NMAX];
+int S_[LOG2_NMAX+1][NMAX]
 
 
 void* par_function_dispatch(void* a)
