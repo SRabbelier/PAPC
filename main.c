@@ -8,7 +8,7 @@
 #include "main.h"
 
 extern void seq_function(int n, int log_n);
-extern void par_function(int n, int log_n, int start_n, int end_n);
+extern void par_function(int n, int log_n, int id, int nt);
 
 int Ns[NSIZE] = {4096, 8192, 16384, 32768, 65536, 131072, 262144};
 int Ls[NSIZE] = {12, 13, 14, 15, 16, 17, 18};
@@ -18,8 +18,6 @@ typedef struct __ThreadArg {
     int nrT;
     int n;
     int log_n;
-    int start_n;
-    int end_n;
     int nt;
 } tThreadArg;
 
@@ -54,7 +52,7 @@ void* par_function_dispatch(void* a)
 
     for(iter = 0; iter < TIMES; iter++)
     {
-        par_function(x->n, x->log_n, x->start_n, x->end_n);
+        par_function(x->n, x->log_n, x->id, x->nt);
         pthread_barrier_wait(&barr);
     }
 }
@@ -129,8 +127,6 @@ int main (int argc, char *argv[])
                 x[j].nrT=nt; // number of threads in this round
                 x[j].n=n;  //input size
                 x[j].log_n=log_n;  // lg(input size)
-                x[j].start_n= (j-1)*n/nt;  // start pos
-                x[j].end_n= (j)*n/nt;  // end pos
                 x[j].nt = nt; // number of threads
                 pthread_create(&callThd[j-1], &attr, par_function_dispatch, (void *)&x[j]);
             }

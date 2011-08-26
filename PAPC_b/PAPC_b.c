@@ -140,8 +140,11 @@ void omp_function(int n, int log_n, int threads){
 	}
 }
 
-void par_function(int n, int log_n, int start_n, int end_n) {
+void par_function(int n, int log_n, int id, int nt) {
 	int i;
+
+    int start_n= (id-1)*n/nt;  // start pos
+    int end_n= (id)*n/nt;  // end pos
 
 	for(i = start_n; i < end_n/log_n; i++)
 	{
