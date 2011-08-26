@@ -3,7 +3,7 @@ CFLAGS=-O0 -fopenmp
 all: PAPC_c
 
 PAPC_c: main.o PAPC_c.o ../main.h
-	gcc -o $@ $^ -lm -O0
+	gcc -o $@ $^ -lm $(CFLAGS)
 
 PAPC_c_: ../main.o PAPC_c.o  ../main.h
 	gcc -o $@ $^ -lm -lpthread $(CFLAGS)
