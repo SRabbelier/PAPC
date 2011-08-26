@@ -1,19 +1,39 @@
 #include <math.h>
 #include <stdio.h>
-#include <assert.h>
+#include <pthread.h>
 
-#include "PAPC_b.h"
+#include "../main.h"
 
-#define dim_x 16
-#define dim_2x 2*dim_x
-#define log_x 4
-#define dim_log dim_x / log_x
+
+// Subset
+extern int B[NMAX];
+extern int B2[NMAX];
+// Output
+extern int C[2*NMAX];
+
+// Scratch area
+extern int AA[NMAX / LOG2_NMAX];
+extern int BB[NMAX / LOG2_NMAX];
+extern int S[NMAX];
+
+extern pthread_barrier_t internal_barr;
+
+void init(int n){
+    /* Initialize the input for this iteration*/
+    // B <- A
+    int i;
+    for(i = 0; i < n; i++)
+    {
+		B[i] = i+1;
+		B2[i] = i*2;
+    }
+}
 
 // adapted from http://en.wikipedia.org/wiki/Binary_search#Iterative
-int rank(int value, int A[dim_x])
+int rank(int value, int* A, int n)
 {
 	int low = 0;
-	int high = dim_x-1;
+	int high = n-1;
 	int mid;
 
 	while (low <= high)
@@ -32,7 +52,7 @@ int rank(int value, int A[dim_x])
 	return low;
 }
 
-void seq_merge(int A[dim_x], int B[dim_x], int C[dim_2x], int start_a, int start_b)
+void seq_merge(int n, int start_a, int start_b)
 {
 	int finger_a = start_a;
 	int finger_b = start_b;
@@ -40,8 +60,8 @@ void seq_merge(int A[dim_x], int B[dim_x], int C[dim_2x], int start_a, int start
 
 	do
 	{
-		int val_a = A[finger_a];
-		int val_b = B[finger_b];
+		int val_a = B[finger_a];
+		int val_b = B2[finger_b];
 
 		if(val_a < val_b)
 		{
@@ -55,76 +75,100 @@ void seq_merge(int A[dim_x], int B[dim_x], int C[dim_2x], int start_a, int start
 		}
 		next++;
 	}
-	while((next < dim_2x) && !C[next]);
+	while((next < 2*n) && !C[next]);
 }
 
-int array_cmp(int L[dim_2x], int R[dim_2x])
-{
-	int x;
-	for(x = 0; x < dim_x; x++)
-	{
-		int Lxi = L[x];
-		int Rxi = R[x];
 
-		if(Lxi != Rxi)
-			return 0;
-	}
-	return 1;
-}
-
-void merge(int A[dim_x], int B[dim_x], int C[dim_2x])
+void seq_function(int n, int log_n)
 {
-	int AA[log_x] = { 0 };
-	int BB[log_x] = { 0 };
 	int i;
 
-	#pragma omp parallel for schedule(static, 1) shared(A,B,C,AA,BB) private(i) num_threads(4)
-	for(i = 0; i < dim_x/log_x; i++)
+	for(i = 0; i < n/log_n; i++)
 	{
-		int pos = i*log_x;
+		int pos = i*log_n;
 
-		int val_a = A[pos] - 1;
-		AA[i] = rank(val_a, B);
+		int val_a = B[pos] - 1;
+		AA[i] = rank(val_a, B2, n);
 		int rank_a = AA[i] + pos;
-		C[rank_a] = A[pos];
+		C[rank_a] = B[pos];
 
-		int val_b = B[pos];
-		BB[i] = rank(val_b, A);
+		int val_b = B2[pos];
+		BB[i] = rank(val_b, B, n);
 		int rank_b = BB[i] + pos;
-		C[rank_b] = B[pos];
+		C[rank_b] = B2[pos];
 	}
 
-	#pragma omp parallel for schedule(static, 1) shared(A,B,C,AA,BB) private(i) num_threads(4)
-	for(i = 0; i < dim_x/log_x; i++)
+	for(i = 0; i < n/log_n; i++)
 	{
-		int pos = i*log_x;
+		int pos = i*log_n;
 		int rank = AA[i];
-		seq_merge(A, B, C, pos, rank);
+		seq_merge(n, pos, rank);
 
 		rank = BB[i];
-		seq_merge(A, B, C, rank, pos);
+		seq_merge(n, rank, pos);
+	}
+}
+
+void omp_function(int n, int log_n, int threads){
+	int i;
+
+	#pragma omp parallel for schedule(static, threads) shared(B,B2,C,AA,BB) private(i) num_threads(threads)
+	for(i = 0; i < n/log_n; i++)
+	{
+		int pos = i*log_n;
+
+		int val_a = B[pos] - 1;
+		AA[i] = rank(val_a, B2, n);
+		int rank_a = AA[i] + pos;
+		C[rank_a] = B[pos];
+
+		int val_b = B2[pos];
+		BB[i] = rank(val_b, B, n);
+		int rank_b = BB[i] + pos;
+		C[rank_b] = B2[pos];
 	}
 
+	#pragma omp parallel for schedule(static, threads) shared(B,B2,C,AA,BB) private(i) num_threads(threads)
+	for(i = 0; i < n/log_n; i++)
+	{
+		int pos = i*log_n;
+		int rank = AA[i];
+		seq_merge(n, pos, rank);
+
+		rank = BB[i];
+		seq_merge(n, rank, pos);
+	}
 }
 
-void calculate_merge()
-{
-	int A[dim_x] = {1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377, 610, 987, 1597};
-	int B[dim_x] = {2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32};
-	int C[dim_2x] = { 0 };
-	int eq;
+void par_function(int n, int log_n, int start_n, int end_n) {
+	int i;
 
-	merge(A, B, C);
+	for(i = start_n; i < end_n/log_n; i++)
+	{
+		int pos = i*log_n;
 
-	int Cp[dim_2x] = {1, 2, 2, 3, 4, 5, 6, 8, 8, 10, 12, 13, 14, 16, 18, 20, 21, 22, 24, 26, 28, 30, 32, 34, 55, 89, 144, 233, 377, 610, 987, 1597};
+		int val_a = B[pos] - 1;
+		AA[i] = rank(val_a, B2, n);
+		int rank_a = AA[i] + pos;
+		C[rank_a] = B[pos];
 
-	eq = array_cmp(C, Cp);
-	assert(eq == 1);
-}
+		int val_b = B2[pos];
+		BB[i] = rank(val_b, B, n);
+		int rank_b = BB[i] + pos;
+		C[rank_b] = B2[pos];
+	}
 
-int main(int argc, char * argv[])
-{
-	calculate_merge();
-	printf("Win\n");
-	return 0;
+    pthread_barrier_wait(&internal_barr);
+
+	for(i = start_n; i < end_n/log_n; i++)
+	{
+		int pos = i*log_n;
+		int rank = AA[i];
+		seq_merge(n, pos, rank);
+
+		rank = BB[i];
+		seq_merge(n, rank, pos);
+	}
+
+    pthread_barrier_wait(&internal_barr);
 }
