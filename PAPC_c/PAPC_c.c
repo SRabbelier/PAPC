@@ -1,74 +1,104 @@
 #include <assert.h>
 #include <stdio.h>
+#include <pthread.h>
 
-#include "PAPC_c.h"
+#include "../main.h"
 
-#define dim_x 16
-#define log_x 4
-#define dim_log dim_x / log_x
 
-int array_cmp(int L[dim_x], int R[dim_x])
-{
-	int x;
-	for(x = 0; x < dim_x; x++)
-	{
-		int Lxi = L[x];
-		int Rxi = R[x];
+// Seed Input
+extern int A[NMAX];
+// Subset
+extern int B[NMAX];
+// Output
+extern int C[2*NMAX];
 
-		if(Lxi != Rxi)
-			return 0;
-	}
-	return 1;
+// Scratch area
+extern int AA[NMAX / LOG2_NMAX];
+extern int BB[NMAX / LOG2_NMAX];
+extern int S[NMAX];
+
+extern pthread_barrier_t barr, internal_barr;
+
+void init(int n){
+    /* Initialize the input for this iteration*/
+    // B <- A
+    int i;
+    for(i = 0; i < n; i++)
+    {
+       B[i] = i+1; 
+    }
+    B[i] = i;
 }
 
-void pointer_distance(int P[dim_x], int D[dim_x])
-{
-	int S[dim_x] = { 0 };
-	int i, x;
+void seq_function(int n, int log_n){
+    /* The code for sequential algorithm */
+    // Perform operations on B
 
-	for(i = 0; i < dim_x; i++)
-	{
-		S[i] = P[i];
+    int i, x;
 
-		if(i != S[i])
-			D[i] = 1;
-		else
-			D[i] = 0;
-	}
+    for(i = 0; i < n; i++)
+    {
+        S[i] = B[i];
 
-	for(x = 0; x < log_x; x++)
-	{
-		#pragma omp parallel for schedule(static, 4) shared(S,P) private(i) num_threads(4)
-		for(i = 0; i < dim_x; i++)
-		{		
-			if(S[i] != S[S[i]])
-			{
-				int pos = S[i];
-				D[i] = D[i] + D[pos];
-				int next = S[pos];
-				S[i] = next;
-			}
-		}
-	}
+        if(i != S[i])
+            C[i] = 1;
+        else
+            C[i] = 0;
+    }
+
+    for(x = 0; x < log_n; x++)
+    {
+        for(i = 0; i < n; i++)
+        {
+            if(S[i] != S[S[i]])
+            {
+                int pos = S[i];
+                C[i] = C[i] + C[pos];
+                int next = S[pos];
+                S[i] = next;
+            }
+        }
+    }
 }
 
-void calculate_pointer_distance()
-{
-	int A[dim_x] = {13, 12, 4, 15, 10, 9, 8, 11, 8, 7, 6, 14, 3, 2, 1, 0};
-	int B[dim_x] = { 0 };
-	int eq;
+void omp_function(int n, int log_n, int threads){
+    /* The code for sequential algorithm */
+    // Perform operations on B
 
-	pointer_distance(A, B);
+    int i, x;
 
-	int Bp[dim_x] = {6, 10, 4, 8, 3, 15, 1, 13, 0, 14, 2, 12, 9, 5, 11, 7};
+    for(i = 0; i < n; i++)
+    {
+        S[i] = B[i];
 
-	eq = array_cmp(B, Bp);
-	assert(eq == 1);
+        if(i != S[i])
+            C[i] = 1;
+        else
+            C[i] = 0;
+    }
+
+    for(x = 0; x < log_n; x++)
+    {
+        #pragma omp parallel for schedule(static, threads) shared(S,C) private(i) num_threads(threads)
+        for(i = 0; i < n; i++)
+        {
+            if(S[i] != S[S[i]])
+            {
+                int pos = S[i];
+                C[i] = C[i] + C[pos];
+                int next = S[pos];
+                S[i] = next;
+            }
+        }
+    }
 }
 
-int main(int argc, char * argv[])
-{
-	calculate_pointer_distance();
-	printf("Win\n");
-	return 0;
+void par_function(int n, int log_n, int j, int start_n, int end_n){
+    int i;
+
+    for(i = start_n; i < end_n; i++)
+    {
+        /* The code for threaded computation */
+        // Perform operations on B
+    }
 }
