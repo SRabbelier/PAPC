@@ -93,12 +93,34 @@ void omp_function(int n, int log_n, int threads){
     }
 }
 
-void par_function(int n, int log_n, int j, int start_n, int end_n){
-    int i;
+void par_function(int n, int log_n, int start_n, int end_n)
+{
+    int i, x;
 
     for(i = start_n; i < end_n; i++)
     {
-        /* The code for threaded computation */
-        // Perform operations on B
+        S[i] = B[i];
+
+        if(i != S[i])
+            C[i] = 1;
+        else
+            C[i] = 0;
+    }
+
+    pthread_barrier_wait(&internal_barr);
+
+    for(x = 0; x < log_n; x++)
+    {
+        for(i = start_n; i < end_n; i++)
+        {
+            if(S[i] != S[S[i]])
+            {
+                int pos = S[i];
+                C[i] = C[i] + C[pos];
+                int next = S[pos];
+                S[i] = next;
+            }
+        }
+        pthread_barrier_wait(&internal_barr);
     }
 }
