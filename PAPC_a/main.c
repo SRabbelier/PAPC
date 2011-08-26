@@ -42,6 +42,8 @@ int S_[LOG2_NMAX+1][NMAX] = { 0 };
 int C[dim_x] = { 0 };
 int C_[LOG2_NMAX+1][NMAX] = { 0 };
 
+pthread_barrier_t internal_barr;
+
 int calculate_prefix_minima()
 {
 	int eq;
