@@ -2,7 +2,7 @@
 #define NUM_THREADS 32
 
 // Number of iterations
-#define TIMES 1000
+#define TIMES 10
 
 // Input Size
 #define NSIZE 7

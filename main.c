@@ -8,7 +8,7 @@
 #include "main.h"
 
 extern void seq_function(int n, int log_n);
-extern void par_function(int n, int log_n, int j, int start_n, int end_n);
+extern void par_function(int n, int log_n, int start_n, int end_n);
 
 int Ns[NSIZE] = {4096, 8192, 16384, 32768, 65536, 131072, 262144};
 int Ls[NSIZE] = {12, 13, 14, 15, 16, 17, 18};
@@ -37,21 +37,20 @@ int B[NMAX];
 // Output
 int C[2*NMAX];
 
-
 // Scratch area
 int AA[NMAX / LOG2_NMAX];
 int BB[NMAX / LOG2_NMAX];
 int S[NMAX];
 
-void* par_function_dispatch(void* a){
+
+void* par_function_dispatch(void* a)
+{
     int iter;
     tThreadArg* x = (tThreadArg*)a;
 
     for(iter = 0; iter < TIMES; iter++)
     {
-        par_function(x->n, x->log_n, x->id, x->start_n, x->end_n);
-        /* The code for threaded computation */
-        // Perform operations on B
+        par_function(x->n, x->log_n, x->start_n, x->end_n);
         pthread_barrier_wait(&barr);
     }
 }
@@ -74,7 +73,7 @@ int main (int argc, char *argv[])
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
-    printf("|  NSize | Iter | Seq      | Th01      | Th02      | Th04      | Th08      | Par16     |\n");
+    printf("|  NSize | Iter | Seq      | Op01     | Op02     | Op04     | Op08     | Op16     | Th01     | Th02     | Th04     | Th08     | Par16    |\n");
 
     // for each input size
     for(c=0; c < MAX_NSIZE; c++){
@@ -92,6 +91,19 @@ int main (int argc, char *argv[])
         gettimeofday (&endt, NULL);
         dt = (endt.tv_sec*1000000+endt.tv_usec) - (startt.tv_sec*1000000+startt.tv_usec);
         printf(" %ld.%06ld | ", dt/1000000, dt%1000000);
+
+        for(nt=1; nt<NUM_THREADS; nt=nt<<1){
+            /* Run sequential algorithm */
+            dt=0;
+            gettimeofday (&startt, NULL);
+            for (t=0; t<TIMES; t++) {
+                init(n);
+                omp_function(n, log_n, nt);
+            }
+            gettimeofday (&endt, NULL);
+            dt = (endt.tv_sec*1000000+endt.tv_usec) - (startt.tv_sec*1000000+startt.tv_usec);
+            printf("%ld.%06ld | ", dt/1000000, dt%1000000);
+        }
 
         /* Run threaded algorithm(s) */
         for(nt=1; nt<NUM_THREADS; nt=nt<<1){
@@ -142,7 +154,7 @@ int main (int argc, char *argv[])
                 return -1;
             }
             dt = (endt.tv_sec*1000000+endt.tv_usec) - (startt.tv_sec*1000000+startt.tv_usec);
-            printf(" %ld.%06ld | ", dt/1000000, dt%1000000);
+            printf("%ld.%06ld | ", dt/1000000, dt%1000000);
         }
         printf("\n");
     }
