@@ -15,6 +15,7 @@ run_: PAPC_b_
 	./PAPC_b_
 
 clean:
-	rm *.o
+	rm -f *.o
+	rm -f PAPC_b PAPC_b_
 
 .PHONY: run
